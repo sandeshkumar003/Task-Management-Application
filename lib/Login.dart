@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'ForgotPassword.dart';
 import 'SignUp.dart';
+import 'Dashboard.dart';
 class Login extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,7 @@ class _loginState extends State<login>
         elevation: 0,
         backgroundColor: Colors.transparent,
         leading: IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_back,
             color: Colors.black,
           ),
@@ -72,7 +73,9 @@ class _loginState extends State<login>
             SizedBox(height: 40,),
             ElevatedButton(
               child: Text('Login'),
-              onPressed: () {},
+              onPressed: () => {
+                openHomepage()
+              },
               style: ElevatedButton.styleFrom(
                   primary: Colors.purple,
                   padding: EdgeInsets.symmetric(horizontal: 130, vertical: 20),
@@ -107,5 +110,9 @@ class _loginState extends State<login>
   void openForgotPassword()
   {
     Navigator.push(context, MaterialPageRoute(builder: (context)=>ForgotPassword()));
+  }
+  void openHomepage()
+  {
+    Navigator.push(context, MaterialPageRoute(builder: (context)=>HomePage()));
   }
 }
