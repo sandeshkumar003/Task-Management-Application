@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatelessWidget {
   @override
@@ -39,6 +40,24 @@ class _homePageState extends State<homePage> {
     "DEC"
   ];
   CalendarController ctrlr = new CalendarController();
+
+  var _TodoTitleController=TextEditingController();
+
+  var _TodoDescriptionController= TextEditingController();
+
+  var _TodoDateController=TextEditingController();
+
+  DateTime _dateTime=DateTime.now();
+
+  _selectedTodoDate(BuildContext context) async{
+    var _pickedDate= await showDatePicker(context: context, initialDate: _dateTime, firstDate: DateTime(2000), lastDate: DateTime(2100));
+    if(_pickedDate!=null){
+      setState(() {
+        _dateTime=_pickedDate;
+        _TodoDateController.text=DateFormat('yyyy-MM-dd').format(_pickedDate);
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -220,7 +239,70 @@ class _homePageState extends State<homePage> {
                       left: 0,
                       right: 0,
                       child: InkWell(
-                        onTap: openTaskPop,
+                        onTap:(){
+                          showGeneralDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                              barrierColor: Colors.black,
+                              transitionDuration: Duration(microseconds: 200),
+                              pageBuilder: (BuildContext context, Animation first,
+                                  Animation second){
+                                return Scaffold(
+                                    appBar: AppBar(
+                                      title:Text("Create Todo"),
+                                    ),
+                                    body:Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: Column(
+                                        children: <Widget>[
+                                          TextField(
+                                            controller:_TodoTitleController=TextEditingController(),
+                                            decoration: InputDecoration(
+                                                labelText:"Title",
+                                                hintText: 'Write Todo Title'
+                                            ),
+                                          ),
+                                          TextField(
+                                            controller:_TodoDescriptionController=TextEditingController(),
+                                            decoration: InputDecoration(
+                                                labelText:"Description",
+                                                hintText: 'Write Description of task'
+                                            ),
+                                          ),
+                                          TextField(
+                                            controller:_TodoDateController=TextEditingController(),
+                                            decoration: InputDecoration(
+                                                labelText:"Date",
+                                                hintText: 'Pick a date',
+                                                prefixIcon: InkWell(
+                                                  onTap: (){
+                                                    _selectedTodoDate(context);
+                                                  },
+                                                  child: Icon(Icons.calendar_today),
+                                                )
+
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            height: 40,
+                                          ),
+                                          ElevatedButton(
+                                              onPressed: () {},
+                                              child: Text('Save'),
+                                            style: ElevatedButton.styleFrom(
+                                              primary: Colors.blue
+                                            ),
+                                              )
+
+                                        ],
+                                      ),
+                                    )
+                                );
+                              }
+                          );
+
+                        },
                         child: Container(
                           height: 80,
                           width: 80,
@@ -240,245 +322,16 @@ class _homePageState extends State<homePage> {
                                 color: Colors.white,
                               ),
                             ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
+
               ),
             ],
           ),
-          Container(
-            child: (taskPop == "open")
-                ? Container(
-              height: MediaQuery.of(context).size.height,
-              width: MediaQuery.of(context).size.width,
-              color: Colors.black.withOpacity(0.3),
-              child: Center(
-                child: InkWell(
-                  onTap: closeTaskPop,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                      color: Colors.white,
-                    ),
-                    height: MediaQuery.of(context).size.height * 0.3,
-                    width: MediaQuery.of(context).size.width * 0.7,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        SizedBox(
-                          height: 1,
-                        ),
-                        InkWell(
-                          onTap: (){
-                            showGeneralDialog(
-                                context: context,
-                                barrierDismissible: true,
-                                barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-                                barrierColor: Colors.black,
-                                transitionDuration: Duration(microseconds: 200),
-                                pageBuilder: (BuildContext context, Animation first,
-                                Animation second){
-                                  return Scaffold(
-                                  body: Container(
-                                    width: MediaQuery.of(context).size.width - 10,
-                                    height: MediaQuery.of(context).size.height - 80,
-                                    padding: EdgeInsets.all(20),
-                                    color: Colors.white,
-                                    child: Container(
-                                      height: MediaQuery.of(context).size.height,
-                                      child: Stack(
-                                        children: [
-                                          Positioned
-                                            (
-                                            bottom:0,
-                                            child: Container(
-                                              height: 50,
-                                              width: MediaQuery.of(context).size.width,
-                                              color: Colors.black.withOpacity(0.8),
-                                            ),
-                                          ),
-                                          Container(
-                                            margin: EdgeInsets.symmetric(horizontal: 30),
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.all(Radius.circular(7)),
-                                              color: Colors.white
-                                            ),
-                                            width: MediaQuery.of(context).size.width,
-                                            height: MediaQuery.of(context).size.height*0.85,
-                                            child: SingleChildScrollView(
-                                              child: Column(
-                                                children: [
-                                                  SizedBox(height: 25,),
-                                                  Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                    children: [
-                                                      Text("For", style: TextStyle(
-                                                          fontSize:18,
-                                                          color: Colors.black,
-                                                  ),),
-                                                      Container(
-                                                        padding: EdgeInsets.all(10),
-                                                        decoration: BoxDecoration(
-                                                          borderRadius: BorderRadius.all(Radius.circular(20)),
-                                                          color: Colors.grey.withOpacity(0.2)
-                                                        ),
-                                                        child: Text("Assignee",style: TextStyle(
-                                                          fontSize: 18,
-                                                          color:Colors.black,
-                                                        ),),
-                                                      ),
-                                                      SizedBox(width: 20,),
-                                                      Text("In", style: TextStyle(
-                                                        fontSize:18,
-                                                        color: Colors.black,
-                                                      ),),
-                                                      Container(
-                                                        padding: EdgeInsets.all(10),
-                                                        decoration: BoxDecoration(
-                                                            borderRadius: BorderRadius.all(Radius.circular(20)),
-                                                            color: Colors.grey.withOpacity(0.2)
-                                                        ),
-                                                        child: Text("Project",style: TextStyle(
-                                                          fontSize: 18,
-                                                          color:Colors.black,
-                                                        ),),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  SizedBox(height: 15,),
-                                                  Container(
-                                                    padding: EdgeInsets.all(10),
-                                                    color: Colors.grey.withOpacity(0.2),
-                                                    child: TextField(
-                                                      decoration: InputDecoration(
-                                                        hintText: "Title",
-                                                        border: InputBorder.none
-                                                      ),
-                                                      style: TextStyle(
-                                                        fontSize: 18
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  SizedBox(height: 15,),
-                                                  Container(
-                                                    padding:EdgeInsets.all(15),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Text("Description", style: TextStyle(
-                                                          fontSize: 18
-                                                        ),),
-                                                        SizedBox(height: 10,),
-                                                        Container(
-                                                          height: 150,
-                                                          width: double.infinity,
-                                                          decoration: BoxDecoration(
-                                                            color: Colors.white,
-                                                              borderRadius: BorderRadius.only(topRight: Radius.circular(15),topLeft: Radius.circular(15)),
-                                                            border: Border.all(
-                                                              color: Colors.grey.withOpacity(0.5)
-                                                            )
-                                                          ),
-                                                          child: TextField(
-                                                            maxLines: 6,
-                                                            decoration: InputDecoration(
-                                                              border: InputBorder.none,
-                                                              hintText: "Add Description Here",
-                                                            ),
-                                                            style: TextStyle,
-                                                          ),
-
-                                                        )
-
-                                                      ],
-                                                    )
-
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-
-                                          )
-                                      ],
-                                      ),
-                                    ),
-                                  ),
-                                  );
-                                }
-                            );
-
-                          },
-                          child: Container(
-                            child: Text(
-                              "Add Task",
-                              style: TextStyle(
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 1,
-                          margin: EdgeInsets.symmetric(horizontal: 30),
-                          color: Colors.black.withOpacity(0.2),
-                        ),
-                        InkWell(
-                          onTap: openNewQuiz(),
-                          child: Container(
-                            child: Text(
-                              "Add Quiz",
-                              style: TextStyle(
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 1,
-                          margin: EdgeInsets.symmetric(horizontal: 30),
-                          color: Colors.black.withOpacity(0.2),
-                        ),
-                        InkWell(
-                          onTap: openNewMeeting(),
-                          child: Container(
-                            child: Text(
-                              "Add Meeting",
-                              style: TextStyle(
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 1,
-                          margin: EdgeInsets.symmetric(horizontal: 30),
-                          color: Colors.black.withOpacity(0.2),
-                        ),
-                        InkWell(
-                          onTap: openNewProject(),
-                          child: Container(
-                            child: Text(
-                              "Add Project",
-                              style: TextStyle(
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 1,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            )
-                : Container(),
-          )
         ],
       ),
     );
