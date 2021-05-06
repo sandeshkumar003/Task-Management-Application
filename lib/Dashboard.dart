@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
+import 'package:taskmanagerapp/models/todo.dart';
+import 'package:taskmanagerapp/services/todo_service.dart';
 
 class HomePage extends StatelessWidget {
   @override
@@ -47,7 +49,20 @@ class _homePageState extends State<homePage> {
 
   var _TodoDateController=TextEditingController();
 
+  var _todo=Todo();
+  var _todoService=TodoService();
+
+  final GlobalKey<ScaffoldState>_globalKey = GlobalKey<ScaffoldState>();
   DateTime _dateTime=DateTime.now();
+
+  var todo;
+
+  var _editTodoTitleController=TextEditingController();
+
+  var _editTodoDateController=TextEditingController();
+
+  var _editTodoDescriptionController= TextEditingController();
+
 
   _selectedTodoDate(BuildContext context) async{
     var _pickedDate= await showDatePicker(context: context, initialDate: _dateTime, firstDate: DateTime(2000), lastDate: DateTime(2100));
@@ -58,9 +73,133 @@ class _homePageState extends State<homePage> {
       });
     }
   }
+  _showSuccessSnackBar(message){
+    var _snackBar=SnackBar(content: message);
+    _globalKey.currentState.showSnackBar(_snackBar);
+  }
+  // TodoService _todoService;
+
+  List<Todo> _todoList = [];
+@override
+  initState(){
+    super.initState();
+    getAllTodos();
+  }
+
+  getAllTodos() async{
+    _todoService=TodoService();
+    _todoList= [];
+
+    var todos= await _todoService.readTodos();
+
+    todos.forEach((todo){
+    setState(() {
+      var model=Todo();
+      model.id=todo['id'];
+      model.title=todo['title'];
+      model.description=todo['description'];
+      model.todoDate=todo['todoDate'];
+      _todoList.add(model);
+    });
+    });
+  }
+  _editTodo(BuildContext context,todoId) async
+  {
+    todo = await _todoService.readTodoById(todoId);
+    setState(() {
+    _editTodoTitleController.text=todo[0]['title']??'No title';
+    _editTodoDescriptionController.text=todo[0]['description']?? 'No description';
+    _editTodoDateController.text=todo[0]['todoDate']?? 'No date';
+    });
+    _editFormDialog(context);
+  }
+  _editFormDialog(BuildContext context){
+    return showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+        barrierColor: Colors.black,
+        transitionDuration: Duration(microseconds: 200),
+        pageBuilder: (BuildContext context, Animation first,
+            Animation second){
+          return Scaffold(
+              appBar: AppBar(
+                title:Text("Edit Todo form"),
+              ),
+              body:Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  children: <Widget>[
+                    TextField(
+                      controller:_editTodoTitleController=TextEditingController(),
+                      decoration: InputDecoration(
+                          labelText:"Title",
+                          hintText: 'Write Todo Title'
+                      ),
+                    ),
+                    TextField(
+                      controller:_editTodoDescriptionController=TextEditingController(),
+                      decoration: InputDecoration(
+                          labelText:"Description",
+                          hintText: 'Write Description of task'
+                      ),
+                    ),
+                    TextField(
+                      controller:_editTodoDateController=TextEditingController(),
+                      decoration: InputDecoration(
+                          labelText:"Date",
+                          hintText: 'Pick a date',
+                          prefixIcon: InkWell(
+                            onTap: (){
+                              _selectedTodoDate(context);
+                            },
+                            child: Icon(Icons.calendar_today),
+                          )
+
+                      ),
+                    ),
+                    SizedBox(
+                      height: 40,
+                    ),
+                    ElevatedButton(
+                      onPressed: () async{
+                        // var todoObject=Todo();
+                        //
+                        // todoObject.title=_TodoTitleController.text;
+                        // todoObject.description=_TodoDescriptionController.text;
+                        // todoObject.isFinished=0;
+                        // todoObject.todoDate=_TodoDateController.text;
+                        //
+                        // var _todoService=TodoService();
+                        _todo.id=todo[0]['id'];
+                        _todo.title=_editTodoTitleController.text;
+                        _todo.description=_editTodoDescriptionController.text;
+                        _todo.todoDate=_editTodoDateController.text;
+
+                        var result= await _todoService.updateTodo(_todo);
+
+                        if(result > 0){
+                          _showSuccessSnackBar(Text("Task successfully created"));
+                        }
+                        print(result);
+                      },
+                      child: Text('Update'),
+                      style: ElevatedButton.styleFrom(
+                          primary: Colors.blue
+                      ),
+                    )
+
+                  ],
+                ),
+              )
+          );
+        }
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _globalKey,
       body: Stack(
         children: [
           Column(
@@ -83,6 +222,7 @@ class _homePageState extends State<homePage> {
                   )
                 ],
               ),
+
               Container(
                 height: 70,
                 color: Color(0xff000000),
@@ -154,11 +294,13 @@ class _homePageState extends State<homePage> {
               Expanded(
                   child: SingleChildScrollView(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
+
                         SizedBox(
                           height: 10,
                         ),
+
                         Container(
                           padding: EdgeInsets.all(20),
                           child: Column(
@@ -171,12 +313,46 @@ class _homePageState extends State<homePage> {
                             ],
                           ),
                         ),
-                        taskWidget(Colors.green, "Meeting with chuddy Buddies",
-                            "9:00 P.M Sunday"),
-                        taskWidget(Colors.red, "Meeting with Sir Mohsin ",
-                            "3: 00 P.M Wednesday"),
-                        taskWidget(
-                            Colors.blue, "Meeting with Cat", "9:00 P.M Everyday"),
+                        // taskWidget(Colors.green, "Meeting with chuddy Buddies",
+                        //     "9:00 P.M Sunday"),
+                        // taskWidget(Colors.red, "Meeting with Sir Mohsin ",
+                        //     "3: 00 P.M Wednesday"),
+                        // taskWidget(
+                        //     Colors.blue, "Meeting with Cat", "9:00 P.M Everyday"),
+                        Flexible(
+                          fit:FlexFit.loose,
+                            child:SizedBox(
+                              height:450,
+                              child: ListView.builder(
+                                  itemCount: _todoList.length,
+                                  shrinkWrap: true,
+                                  itemBuilder: (context,index){
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 8.0,left: 8.0,right: 8.0),
+                                  child: Card(
+                                  elevation: 8,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(0)
+                                  ),
+                                  child: ListTile(
+                                    leading:IconButton(icon:Icon(Icons.edit),onPressed: (){
+                                      _editTodo(context, _todoList[index].id);
+                                    }),
+                                    title: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                      Text(_todoList[index].title ?? 'No title'),
+                                        IconButton(icon:Icon(Icons.delete,color: Colors.red,),onPressed: (){})
+                                    ],
+                                  ),
+                                    subtitle: Text(_todoList[index].description ?? 'No Description'),
+                                    trailing: Text(_todoList[index].todoDate ?? 'No Date'),
+                                  )
+                              ),
+                                );
+                          }),
+                            ),
+                          ),
                       ],
                     ),
                   )),
@@ -288,7 +464,24 @@ class _homePageState extends State<homePage> {
                                             height: 40,
                                           ),
                                           ElevatedButton(
-                                              onPressed: () {},
+                                              onPressed: () async{
+                                                var todoObject=Todo();
+
+                                                todoObject.title=_TodoTitleController.text;
+                                                todoObject.description=_TodoDescriptionController.text;
+                                                todoObject.isFinished=0;
+                                                todoObject.todoDate=_TodoDateController.text;
+
+                                                var _todoService=TodoService();
+                                                var result= await _todoService.saveTodo(todoObject);
+
+                                                if(result > 0){
+                                                  _showSuccessSnackBar(Text("Task successfully created"));
+                                                }
+
+                                                print(result);
+
+                                              },
                                               child: Text('Save'),
                                             style: ElevatedButton.styleFrom(
                                               primary: Colors.blue
